@@ -2,6 +2,15 @@
     "companyName": "metakirby5@gmail.com",
     "longName": "Pok\u00e9tch+",
     "projectType": "native",
+  "appKeys": {
+    "MESSAGE_KEY_SEND_PING": 0,
+    "MESSAGE_KEY_RECEIVE_PING": 1,
+    "MESSAGE_KEY_PARTNER_NAME": 2,
+    "MESSAGE_KEY_MY_NAME": 3,
+    "MESSAGE_KEY_LINK_CODE": 4,
+    "MESSAGE_KEY_READY": 5
+  },
+  "capabilities": ["configurable"]
     "resources": {
         "media": [
             {
