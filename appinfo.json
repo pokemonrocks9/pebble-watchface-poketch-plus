@@ -1,16 +1,7 @@
 {
     "companyName": "metakirby5@gmail.com",
-    "longName": "Pok\u00e9tch+",
+    "longName": "Pokétch+",
     "projectType": "native",
-  "appKeys": {
-    "MESSAGE_KEY_SEND_PING": 0,
-    "MESSAGE_KEY_RECEIVE_PING": 1,
-    "MESSAGE_KEY_PARTNER_NAME": 2,
-    "MESSAGE_KEY_MY_NAME": 3,
-    "MESSAGE_KEY_LINK_CODE": 4,
-    "MESSAGE_KEY_READY": 5
-  },
-  "capabilities": ["configurable"]
     "resources": {
         "media": [
             {
@@ -54,10 +45,19 @@
         ]
     },
     "sdkVersion": "3",
-    "shortName": "Pok\u00e9tch+",
+    "shortName": "Pokétch+",
     "uuid": "003eec80-ab22-4cab-b44b-263f524e3a63",
     "versionLabel": "3.0",
     "watchapp": {
         "watchface": true
+    },
+    "appKeys": {
+        "MESSAGE_KEY_PING_RECEIVED": 0,
+        "MESSAGE_KEY_PARTNER_NAME": 1,
+        "MESSAGE_KEY_SEND_PING": 2,
+        "MESSAGE_KEY_CONFIG_MY_NAME": 3,
+        "MESSAGE_KEY_CONFIG_PARTNER_NAME": 4,
+        "MESSAGE_KEY_CONFIG_LINK_CODE": 5,
+        "MESSAGE_KEY_CONFIG_IS_SETUP": 6
     }
 }
