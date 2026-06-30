@@ -1,0 +1,184 @@
+{
+    "author": "Poky",
+    "dependencies": {},
+    "keywords": [],
+    "name": "pokupd",
+    "pebble": {
+        "capabilities": [
+            "location",
+            "configurable"
+        ],
+        "displayName": "Pok\u00e9tch+ Updated",
+        "enableMultiJS": false,
+        "messageKeys": [],
+        "projectType": "native",
+        "resources": {
+            "media": [
+                {
+                    "file": "images/chg_on.png",
+                    "name": "IMAGE_CHG",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "chalk",
+                        "diorite",
+                        "flint"
+                    ],
+                    "type": "png"
+                },
+                {
+                    "file": "images/bang.png",
+                    "name": "IMAGE_BANG",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "chalk",
+                        "diorite",
+                        "flint"
+                    ],
+                    "type": "png"
+                },
+                {
+                    "file": "images/bat.png",
+                    "name": "IMAGE_BAT",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "chalk",
+                        "diorite",
+                        "flint"
+                    ],
+                    "type": "png"
+                },
+                {
+                    "characterRegex": "[0-9:]",
+                    "file": "fonts/HMPoketchDigital.ttf",
+                    "name": "FONT_POKETCH_DIGITAL_70",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "chalk",
+                        "diorite",
+                        "emery",
+                        "gabbro",
+                        "flint"
+                    ],
+                    "type": "font"
+                },
+                {
+                    "characterRegex": "[0-9: ]",
+                    "file": "fonts/HMPoketchDigital.ttf",
+                    "name": "FONT_POKETCH_DIGITAL_30",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "chalk",
+                        "diorite",
+                        "emery",
+                        "gabbro",
+                        "flint"
+                    ],
+                    "type": "font"
+                },
+                {
+                    "characterRegex": "[0-9: ]",
+                    "file": "fonts/HMPoketchDigital.ttf",
+                    "name": "FONT_POKETCH_DIGITAL_97",
+                    "targetPlatforms": [
+                        "emery"
+                    ],
+                    "type": "font"
+                },
+                {
+                    "characterRegex": "[0-9: ]",
+                    "file": "fonts/HMPoketchDigital.ttf",
+                    "name": "FONT_POKETCH_DIGITAL_41",
+                    "targetPlatforms": [
+                        "emery"
+                    ],
+                    "type": "font"
+                },
+                {
+                    "characterRegex": "[0-9: ]",
+                    "file": "fonts/HMPoketchDigital.ttf",
+                    "name": "FONT_POKETCH_DIGITAL_28",
+                    "targetPlatforms": [
+                        "emery"
+                    ],
+                    "type": "font"
+                },
+                {
+                    "file": "images/pika.png",
+                    "name": "IMAGE_PIKA_BG",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "chalk",
+                        "diorite",
+                        "flint"
+                    ],
+                    "type": "png"
+                },
+                {
+                    "file": "images/bangemery.png",
+                    "name": "IMAGE_BANG",
+                    "targetPlatforms": [
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/batemery.png",
+                    "name": "IMAGE_BAT",
+                    "targetPlatforms": [
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/chg_onemery.png",
+                    "name": "IMAGE_CHG",
+                    "targetPlatforms": [
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/pikaemery.png",
+                    "name": "IMAGE_PIKA_BG",
+                    "targetPlatforms": [
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/icon.png",
+                    "menuIcon": true,
+                    "name": "ICON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/icon2.png",
+                    "name": "ICON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk",
+            "diorite",
+            "emery",
+            "flint"
+        ],
+        "uuid": "6a99d0d6-57f9-4ad0-818c-9dba4233e328",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "3.1.0"
+}

@@ -1,5 +1,5 @@
 // metakirby5
-// Modified to include "Thinking of You" ping functionality
+// Modified to include "Thinking of You" ping functionality with distance
 
 #include <pebble.h>
 #include "gbitmap_color_palette_manipulator.h"
@@ -26,28 +26,43 @@
 #define FMT_DATE        "%m %d"
 #define FMT_DATE_LEN    sizeof("00 00")
 
+#define FMT_MONTH       "%m"
+#define FMT_MONTH_LEN   sizeof("00")
+
+#define FMT_DAY         "%d"
+#define FMT_DAY_LEN     sizeof("00")
+
 #define FMT_SEC         "%S"
 #define FMT_SEC_LEN     sizeof("00")
 
 #define TIMEOUT_SECDATE 3000
 
-#if defined(PBL_RECT)
-  #define RECT_TIME       GRect(5, 40, 139, 70)
-#elif defined(PBL_ROUND)
-  #define RECT_TIME       GRect(23, 40, 139, 70)
-#endif
-#define RECT_SECDATE    GRect(76, 124, 68, 30)
-#define RECT_PIKA       GRect(0, 122, 144, 48)
-#define RECT_BANG       GRect(18, 128, 4, 16)
-#define RECT_BAT        GRect(60, 160, 80, 2)
-#define BOUND_BAT(pct)  GRect(0, 0, (pct / 5) * 4, 2)
-#define RECT_CHG        GRect(26, 140, 48, 16)
-
-// Ping indicator positioning
-#if defined(PBL_RECT)
-  #define RECT_PING     GRect(130, 5, 10, 10)
-#elif defined(PBL_ROUND)
-  #define RECT_PING     GRect(155, 20, 10, 10)
+#if defined(PBL_PLATFORM_EMERY)
+  #define RECT_TIME       GRect(2, 52, 200, 140)
+  #define RECT_SECDATE    GRect(106, 168, 94, 41)
+  // Month/day split layers — let the gap between them be tighter than a
+  // full glyph-width space. RECT_SECDATE_MONTH/DAY together span the same
+  // footprint as RECT_SECDATE so visual position doesn't shift.
+  #define RECT_SECDATE_MONTH  GRect(108, 167, 38, 41)
+  #define RECT_SECDATE_GAP    GRect(151, 174, 8, 29)
+  #define RECT_SECDATE_DAY    GRect(156, 167, 38, 41)
+  #define RECT_PIKA       GRect(0, 167, 200, 62)
+  #define RECT_BANG       GRect(25, 178, 6, 22)
+  #define RECT_BAT        GRect(83, 217, 111, 3)
+  #define RECT_CHG        GRect(36, 190, 66, 22)
+  #define BOUND_BAT(pct)  GRect(0, 0, (pct * 111) / 100, 3)
+#else
+  #if defined(PBL_RECT)
+    #define RECT_TIME       GRect(5, 40, 139, 70)
+  #elif defined(PBL_ROUND)
+    #define RECT_TIME       GRect(23, 40, 139, 70)
+  #endif
+  #define RECT_SECDATE    GRect(76, 124, 68, 30)
+  #define RECT_PIKA       GRect(0, 122, 144, 48)
+  #define RECT_BANG       GRect(18, 128, 4, 16)
+  #define RECT_BAT        GRect(60, 160, 80, 2)
+  #define BOUND_BAT(pct)  GRect(0, 0, (pct / 5) * 4, 2)
+  #define RECT_CHG        GRect(26, 140, 48, 16)
 #endif
 
 // === Layers ===
@@ -60,6 +75,16 @@ static GFont s_time_font;
 
 static TextLayer *s_secdate_layer;
 static GFont s_secdate_font;
+
+#if defined(PBL_PLATFORM_EMERY)
+// On Emery, the date is split into separate month/day TextLayers so the
+// gap between them can use a smaller font than the digits themselves.
+// s_secdate_layer above is still used for showing seconds.
+static TextLayer *s_secdate_month_layer;
+static TextLayer *s_secdate_gap_layer;
+static TextLayer *s_secdate_day_layer;
+static GFont s_secdate_gap_font;
+#endif
 
 static BitmapLayer *s_bang_layer;
 static GBitmap *s_bang;
@@ -111,6 +136,7 @@ static void colorize(BitmapLayer *layer, bool day) {
     replace_gbitmap_colors(colors_to_replace, replace_with_colors, PALETTE_SIZE, bitmap, layer);
   #else
     bitmap_layer_set_compositing_mode(layer, day ? GCompOpAssign : GCompOpAssignInverted);
+    layer_mark_dirty(bitmap_layer_get_layer(layer));
   #endif
 }
 
@@ -128,6 +154,29 @@ static void update_secdate(struct tm *tick_time) {
   // Set the buffer
   text_layer_set_text(s_secdate_layer, showDate ? date_buf : sec_buf);
   layer_mark_dirty(text_layer_get_layer(s_secdate_layer));
+
+#if defined(PBL_PLATFORM_EMERY)
+  // Drive the split month/day layers in lockstep, and toggle visibility
+  // based on whether we're showing the date or the seconds.
+  static char month_buf[FMT_MONTH_LEN];
+  static char day_buf[FMT_DAY_LEN];
+
+  if (showDate) {
+    strftime(month_buf, FMT_MONTH_LEN, FMT_MONTH, tick_time);
+    strftime(day_buf, FMT_DAY_LEN, FMT_DAY, tick_time);
+    text_layer_set_text(s_secdate_month_layer, month_buf);
+    text_layer_set_text(s_secdate_day_layer, day_buf);
+  }
+
+  layer_set_hidden(text_layer_get_layer(s_secdate_layer), showDate);
+  layer_set_hidden(text_layer_get_layer(s_secdate_month_layer), !showDate);
+  layer_set_hidden(text_layer_get_layer(s_secdate_gap_layer), !showDate);
+  layer_set_hidden(text_layer_get_layer(s_secdate_day_layer), !showDate);
+
+  layer_mark_dirty(text_layer_get_layer(s_secdate_month_layer));
+  layer_mark_dirty(text_layer_get_layer(s_secdate_gap_layer));
+  layer_mark_dirty(text_layer_get_layer(s_secdate_day_layer));
+#endif
 }
 
 static void show_seconds(void *data) {
@@ -139,29 +188,6 @@ static void show_seconds(void *data) {
   // Show seconds
   showDate = false;
   update_secdate(tick_time);
-}
-
-// === Ping helpers ===
-
-static void clear_ping_indicator(void *data) {
-  s_ping_active = false;
-  s_ping_timer = NULL;
-  layer_mark_dirty(s_ping_layer);
-}
-
-static void ping_layer_update_proc(Layer *layer, GContext *ctx) {
-  if (s_ping_active) {
-    GRect bounds = layer_get_bounds(layer);
-    
-    // Draw red heart indicator
-    graphics_context_set_fill_color(ctx, GColorRed);
-    graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, bounds.size.h / 2), 5);
-    
-    // Draw white outline
-    graphics_context_set_stroke_color(ctx, GColorWhite);
-    graphics_context_set_stroke_width(ctx, 1);
-    graphics_draw_circle(ctx, GPoint(bounds.size.w / 2, bounds.size.h / 2), 5);
-  }
 }
 
 // === Handlers ===
@@ -198,6 +224,11 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       colorize(s_chg_layer, day);
       text_layer_set_text_color(s_time_layer, COLOR_FG(day));
       text_layer_set_text_color(s_secdate_layer, COLOR_FG(day));
+#if defined(PBL_PLATFORM_EMERY)
+      text_layer_set_text_color(s_secdate_month_layer, COLOR_FG(day));
+      text_layer_set_text_color(s_secdate_gap_layer, COLOR_FG(day));
+      text_layer_set_text_color(s_secdate_day_layer, COLOR_FG(day));
+#endif
       window_set_background_color(s_main_window, COLOR_BG(day));
       layer_mark_dirty(s_root_layer);
     }
@@ -242,42 +273,6 @@ static void bat_handler(BatteryChargeState charge) {
   layer_set_bounds(bitmap_layer_get_layer(s_bat_layer), BOUND_BAT(charge.charge_percent));
 }
 
-// === AppMessage handlers for ping ===
-
-static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
-  Tuple *ping_tuple = dict_find(iterator, MESSAGE_KEY_PING_RECEIVED);
-  Tuple *partner_name_tuple = dict_find(iterator, MESSAGE_KEY_PARTNER_NAME);
-  
-  if (ping_tuple) {
-    APP_LOG(APP_LOG_LEVEL_INFO, "Ping received from phone!");
-    s_ping_active = true;
-    vibes_double_pulse();
-    light_enable_interaction();
-    
-    if (s_ping_timer) {
-      app_timer_cancel(s_ping_timer);
-    }
-    s_ping_timer = app_timer_register(4000, clear_ping_indicator, NULL);
-    
-    layer_mark_dirty(s_ping_layer);
-  }
-  
-  if (partner_name_tuple) {
-    snprintf(s_partner_name, sizeof(s_partner_name), "%s", partner_name_tuple->value->cstring);
-  }
-}
-
-static void inbox_dropped_callback(AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped! Reason: %d", reason);
-}
-
-static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed! Reason: %d", reason);
-}
-
-static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
-}
 
 // === Setup ===
 
@@ -286,53 +281,85 @@ static void main_window_load(Window *window) {
   s_root_layer = window_get_root_layer(window);
 
   // Pikachu BG
-  s_pika_layer = bitmap_layer_create(RECT_PIKA);
   s_pika = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PIKA_BG);
+  s_pika_layer = bitmap_layer_create(RECT_PIKA);
   bitmap_layer_set_bitmap(s_pika_layer, s_pika);
   layer_add_child(s_root_layer, bitmap_layer_get_layer(s_pika_layer));
 
   // Time
-  s_time_layer = text_layer_create(RECT_TIME);
+#if defined(PBL_PLATFORM_EMERY)
+  // Larger font (97) for high-resolution Emery display
+  s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_POKETCH_DIGITAL_97));
+#else
   s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_POKETCH_DIGITAL_70));
+#endif
+  s_time_layer = text_layer_create(RECT_TIME);
   text_layer_set_font(s_time_layer, s_time_font);
   text_layer_set_background_color(s_time_layer, GColorClear);
+  text_layer_set_overflow_mode(s_time_layer, GTextOverflowModeFill);
   text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
   layer_add_child(s_root_layer, text_layer_get_layer(s_time_layer));
 
   // Secs/date
-  s_secdate_layer = text_layer_create(RECT_SECDATE);
+#if defined(PBL_PLATFORM_EMERY)
+  // Larger font (42) for high-resolution Emery display
+  s_secdate_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_POKETCH_DIGITAL_41));
+#else
   s_secdate_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_POKETCH_DIGITAL_30));
+#endif
+  s_secdate_layer = text_layer_create(RECT_SECDATE);
   text_layer_set_font(s_secdate_layer, s_secdate_font);
   text_layer_set_background_color(s_secdate_layer, GColorClear);
   text_layer_set_text_alignment(s_secdate_layer, GTextAlignmentCenter);
   layer_add_child(s_root_layer, text_layer_get_layer(s_secdate_layer));
 
+#if defined(PBL_PLATFORM_EMERY)
+  // Split month/gap/day layers, gap uses a smaller font size than the digits.
+  // FONT_POKETCH_DIGITAL_28 needs to exist as a media resource (~2/3 of 41).
+  s_secdate_gap_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_POKETCH_DIGITAL_28));
+
+  s_secdate_month_layer = text_layer_create(RECT_SECDATE_MONTH);
+  text_layer_set_font(s_secdate_month_layer, s_secdate_font);
+  text_layer_set_background_color(s_secdate_month_layer, GColorClear);
+  text_layer_set_text_alignment(s_secdate_month_layer, GTextAlignmentCenter);
+  layer_add_child(s_root_layer, text_layer_get_layer(s_secdate_month_layer));
+
+  s_secdate_gap_layer = text_layer_create(RECT_SECDATE_GAP);
+  text_layer_set_font(s_secdate_gap_layer, s_secdate_gap_font);
+  text_layer_set_background_color(s_secdate_gap_layer, GColorClear);
+  text_layer_set_text_alignment(s_secdate_gap_layer, GTextAlignmentCenter);
+  text_layer_set_text(s_secdate_gap_layer, "");
+  layer_add_child(s_root_layer, text_layer_get_layer(s_secdate_gap_layer));
+
+  s_secdate_day_layer = text_layer_create(RECT_SECDATE_DAY);
+  text_layer_set_font(s_secdate_day_layer, s_secdate_font);
+  text_layer_set_background_color(s_secdate_day_layer, GColorClear);
+  text_layer_set_text_alignment(s_secdate_day_layer, GTextAlignmentCenter);
+  layer_add_child(s_root_layer, text_layer_get_layer(s_secdate_day_layer));
+#endif
+
   // Bluetooth
-  s_bang_layer = bitmap_layer_create(RECT_BANG);
   s_bang = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BANG);
+  s_bang_layer = bitmap_layer_create(RECT_BANG);
   bitmap_layer_set_bitmap(s_bang_layer, s_bang);
   layer_insert_above_sibling(bitmap_layer_get_layer(s_bang_layer),
                              bitmap_layer_get_layer(s_pika_layer));
 
   // Battery
-  s_bat_layer = bitmap_layer_create(RECT_BAT);
   s_bat = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BAT);
+  s_bat_layer = bitmap_layer_create(RECT_BAT);
   bitmap_layer_set_bitmap(s_bat_layer, s_bat);
   layer_set_clips(bitmap_layer_get_layer(s_bat_layer), true); // enable clipping
   layer_insert_above_sibling(bitmap_layer_get_layer(s_bat_layer),
                              bitmap_layer_get_layer(s_pika_layer));
 
   // Charging
-  s_chg_layer = bitmap_layer_create(RECT_CHG);
   s_chg = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CHG);
+  s_chg_layer = bitmap_layer_create(RECT_CHG);
   bitmap_layer_set_bitmap(s_chg_layer, s_chg);
   layer_insert_above_sibling(bitmap_layer_get_layer(s_chg_layer),
                              bitmap_layer_get_layer(s_pika_layer));
 
-  // Ping indicator layer
-  s_ping_layer = layer_create(RECT_PING);
-  layer_set_update_proc(s_ping_layer, ping_layer_update_proc);
-  layer_add_child(s_root_layer, s_ping_layer);
 
   // === Initial update ===
 
@@ -362,6 +389,13 @@ static void main_window_unload(Window *window) {
   text_layer_destroy(s_secdate_layer);
   fonts_unload_custom_font(s_secdate_font);
 
+#if defined(PBL_PLATFORM_EMERY)
+  text_layer_destroy(s_secdate_month_layer);
+  text_layer_destroy(s_secdate_gap_layer);
+  text_layer_destroy(s_secdate_day_layer);
+  fonts_unload_custom_font(s_secdate_gap_font);
+#endif
+
   // Bluetooth
   bitmap_layer_destroy(s_bang_layer);
   gbitmap_destroy(s_bang);
@@ -386,15 +420,6 @@ static void init() {
   bluetooth_connection_service_subscribe(bt_handler);
   battery_state_service_subscribe(bat_handler);
 
-  // Initialize AppMessage for ping functionality
-  app_message_register_inbox_received(inbox_received_callback);
-  app_message_register_inbox_dropped(inbox_dropped_callback);
-  app_message_register_outbox_failed(outbox_failed_callback);
-  app_message_register_outbox_sent(outbox_sent_callback);
-  
-  const int inbox_size = 256;
-  const int outbox_size = 256;
-  app_message_open(inbox_size, outbox_size);
 
   s_main_window = window_create();
 
